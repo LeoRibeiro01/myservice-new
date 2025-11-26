@@ -75,21 +75,21 @@ export default function HomePage() {
               <h1 className="text-2xl font-bold text-indigo-600">MyService</h1>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <Link href="/services" className="text-gray-700 hover:text-indigo-600">
+              <Link href="/servicos" className="text-gray-700 hover:text-indigo-600">
                 Encontrar Serviços
               </Link>
-              <Link href="/become-provider" className="text-gray-700 hover:text-indigo-600">
+              <Link href="/seja-prestador" className="text-gray-700 hover:text-indigo-600">
                 Seja um Prestador
               </Link>
-              <Link href="/how-it-works" className="text-gray-700 hover:text-indigo-600">
+              <Link href="/como-funciona" className="text-gray-700 hover:text-indigo-600">
                 Como Funciona
               </Link>
             </nav>
             <div className="flex items-center space-x-4">
-              <Link href="/auth/login">
+              <Link href="/login">
                 <Button variant="ghost">Entrar</Button>
               </Link>
-              <Link href="/auth/register">
+              <Link href="/cadastro">
                 <Button>Cadastrar</Button>
               </Link>
             </div>
@@ -252,12 +252,12 @@ export default function HomePage() {
             Junte-se a milhares de pessoas que já encontraram o profissional ideal
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/register">
+            <Link href="/cadastro">
               <Button size="lg" variant="secondary" className="px-8">
                 Encontrar Profissionais
               </Button>
             </Link>
-            <Link href="/become-provider">
+            <Link href="/seja-prestador">
               <Button
                 size="lg"
                 variant="outline"
@@ -296,7 +296,7 @@ export default function HomePage() {
               <h5 className="font-semibold mb-4">Para Profissionais</h5>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="/become-provider">Seja um Prestador</Link>
+                  <Link href="/seja-prstador">Seja um Prestador</Link>
                 </li>
                 <li>
                   <Link href="/pricing">Preços</Link>

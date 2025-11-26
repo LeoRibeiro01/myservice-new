@@ -181,7 +181,7 @@ export default function HowItWorksPage() {
               <Link href="/services" className="text-gray-700 hover:text-indigo-600">
                 Encontrar Serviços
               </Link>
-              <Link href="/become-provider" className="text-gray-700 hover:text-indigo-600">
+              <Link href="/seja-prestador" className="text-gray-700 hover:text-indigo-600">
                 Seja um Prestador
               </Link>
               <Link href="/how-it-works" className="text-indigo-600 font-medium">
@@ -303,7 +303,7 @@ export default function HowItWorksPage() {
           </div>
 
           <div className="text-center mt-12">
-            <Link href="/become-provider">
+            <Link href="/seja-prestador">
               <Button size="lg" className="bg-green-600 hover:bg-green-700">
                 Quero ser um prestador
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -371,7 +371,7 @@ export default function HowItWorksPage() {
                 Encontrar profissionais
               </Button>
             </Link>
-            <Link href="/become-provider">
+            <Link href="/seja-prestador">
               <Button
                 size="lg"
                 variant="outline"
@@ -410,7 +410,7 @@ export default function HowItWorksPage() {
               <h5 className="font-semibold mb-4">Para Profissionais</h5>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <Link href="/become-provider">Seja um Prestador</Link>
+                  <Link href="/seja-prestador">Seja um Prestador</Link>
                 </li>
                 <li>
                   <Link href="/pricing">Preços</Link>

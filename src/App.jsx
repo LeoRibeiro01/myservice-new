@@ -5,6 +5,7 @@ import { Search, MapPin, Star, Users, Shield, Zap } from "lucide-react"
 import { Button } from "./components/ui/button"
 import { Input } from "./components/ui/input"
 import { Card, CardContent } from "./components/ui/card"
+import Link from "next/link"
 import { Badge } from "./components/ui/badge"
 //import Link from "next/link"
 
@@ -75,20 +76,20 @@ export default function HomePage() {
               <a href="/services" className="text-gray-700 hover:text-indigo-600">
                 Encontrar Serviços
               </a>
-              <a href="/become-provider" className="text-gray-700 hover:text-indigo-600">
+              <a href="/seja-prestador" className="text-gray-700 hover:text-indigo-600">
                 Seja um Prestador
               </a>
-              <a href="/how-it-works" className="text-gray-700 hover:text-indigo-600">
+              <a href="/como-funciona" className="text-gray-700 hover:text-indigo-600">
                 Como Funciona
               </a>
             </nav>
             <div className="flex items-center space-x-4">
-              <a href="/auth/login">
-                <Button variant="ghost">Entrar</Button>
-              </a>
-              <a href="/auth/register">
-                <Button>Cadastrar</Button>
-              </a>
+              <Button asChild variant="ghost">
+              <Link href="/login">Entrar</Link>
+            </Button>
+              <Button asChild>
+              <Link href="/cadastro">Cadastrar</Link>
+            </Button>
             </div>
           </div>
         </div>
@@ -254,7 +255,7 @@ export default function HomePage() {
                 Encontrar Profissionais
               </Button>
             </a>
-            <a href="/become-provider">
+            <a href="/seja-prestador">
               <Button
                 size="lg"
                 variant="outline"
@@ -293,7 +294,7 @@ export default function HomePage() {
               <h5 className="font-semibold mb-4">Para Profissionais</h5>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <a href="/become-provider">Seja um Prestador</a>
+                  <a href="/seja-prestador">Seja um Prestador</a>
                 </li>
                 <li>
                   <a href="/pricing">Preços</a>
