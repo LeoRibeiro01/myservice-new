@@ -32,9 +32,9 @@ export default function LoginPage() {
       const isProvider = email.includes("prestador") || email.includes("provider")
 
       if (isProvider) {
-        router.push("/dashboard/provider")
+        router.push("/dashboard/prestador")
       } else {
-        router.push("/dashboard/client")
+        router.push("/dashboard/cliente")
       }
     }, 1500)
   }

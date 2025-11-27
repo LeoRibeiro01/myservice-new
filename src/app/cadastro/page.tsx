@@ -1,69 +1,96 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react"
+import { useState, ChangeEvent, FormEvent } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { registerUser } from "@/lib/api/auth"
-import { ChangeEvent } from "react";
+import { Mail, Phone, User, Lock, Eye, EyeOff } from "lucide-react"
 
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Separator } from "@/components/ui/separator"
+
+import { createUserWithEmailAndPassword } from "firebase/auth"
+import { auth, db } from "@/lib/firebase"
+import { doc, setDoc, serverTimestamp } from "firebase/firestore"
+import { FieldValue } from "firebase/firestore"
+
+import { UserRegisterData } from "@/types/user"
 
 export default function RegisterPage() {
   const router = useRouter()
+
   const [formData, setFormData] = useState({
+    userType: "",
     name: "",
     email: "",
     phone: "",
     password: "",
-    confirmPassword: "",
-    userType: "client",
+    confirmPassword: ""
   })
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setIsLoading(true)
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
 
-  try {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+
     if (formData.password !== formData.confirmPassword) {
       alert("As senhas não coincidem.")
-      setIsLoading(false)
       return
     }
 
-    const user = await registerUser({
+    if (!formData.userType) {
+      alert("Selecione o tipo de conta.")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      // Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      )
+
+      const user = userCredential.user
+
+      // Dados enviados ao Firestore
+        const userData: UserRegisterData = {
+      uid: user.uid,
       name: formData.name,
       email: formData.email,
-      password: formData.password,
-      type: formData.userType === "client" ? "cliente" : "prestador",
-    })
-
-    if (formData.userType === "provider") {
-      router.push("/auth/provider-register")
-    } else {
-      router.push("/dashboard/client")
+      phone: formData.phone,
+      type: formData.userType as "cliente" | "prestador",
+      createdAt: new Date().toISOString() // ou new Date()
     }
-  } catch (error: any) {
-    console.error(error)
-    alert(error.message || "Erro ao criar conta")
-  }
-
-  setIsLoading(false)
-}
 
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+      // Envia para a coleção "users"
+      await setDoc(doc(db, "users", user.uid), userData)
+
+      // Redirecionamento por tipo de conta
+      router.push(
+        formData.userType === "cliente"
+          ? "/dashboard/cliente"
+          : "/dashboard/prestador"
+      )
+
+    } catch (error: any) {
+      console.error("Erro ao criar conta:", error)
+      alert(error.message || "Erro ao criar conta.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -83,7 +110,8 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Tipo de usuário */}
+
+              {/* TIPO DE CONTA */}
               <div className="space-y-3">
                 <Label>Tipo de conta</Label>
                 <RadioGroup
@@ -92,16 +120,17 @@ export default function RegisterPage() {
                   className="flex space-x-6"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="client" id="client" />
-                    <Label htmlFor="client">Cliente</Label>
+                    <RadioGroupItem value="cliente" id="cliente" />
+                    <Label htmlFor="cliente">Cliente</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="provider" id="provider" />
-                    <Label htmlFor="provider">Prestador de Serviço</Label>
+                    <RadioGroupItem value="prestador" id="prestador" />
+                    <Label htmlFor="prestador">Prestador de Serviço</Label>
                   </div>
                 </RadioGroup>
               </div>
 
+              {/* NOME */}
               <div className="space-y-2">
                 <Label htmlFor="name">Nome completo</Label>
                 <div className="relative">
@@ -118,6 +147,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* EMAIL */}
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
                 <div className="relative">
@@ -134,6 +164,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* TELEFONE */}
               <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
                 <div className="relative">
@@ -150,6 +181,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* SENHA */}
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <div className="relative">
@@ -173,6 +205,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* CONFIRMAR SENHA */}
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmar senha</Label>
                 <div className="relative">
@@ -196,6 +229,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* TERMOS */}
               <div className="flex items-center space-x-2">
                 <input id="terms" type="checkbox" className="rounded border-gray-300" required />
                 <Label htmlFor="terms" className="text-sm">

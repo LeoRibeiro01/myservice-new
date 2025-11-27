@@ -3,16 +3,19 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { serverTimestamp } from "firebase/firestore"
+
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID!,
+  apiKey: "AIzaSyC8bdlY37Gp-gvZQuJwa6W_nBS_9W98IcE",
+  authDomain: "myservice-28f7e.firebaseapp.com",
+  projectId: "myservice-28f7e",
+  storageBucket: "myservice-28f7e.appspot.com",
+  messagingSenderId: "447491660194",
+  appId: "1:447491660194:web:b6803bf0af6c836e06fafb",
+  measurementId: "G-SR0W86L5QC"
 };
+
 
 
 // garante que só inicializa 1 vez (Next reinicia módulos toda hora)
