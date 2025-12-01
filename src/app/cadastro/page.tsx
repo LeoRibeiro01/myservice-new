@@ -15,15 +15,14 @@ import { Separator } from "@/components/ui/separator"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { auth, db } from "@/lib/firebase"
 import { doc, setDoc, serverTimestamp } from "firebase/firestore"
-import { FieldValue } from "firebase/firestore"
 
-import { UserRegisterData } from "@/types/user"
+type UserType = "cliente" | "prestador"
 
 export default function RegisterPage() {
   const router = useRouter()
 
   const [formData, setFormData] = useState({
-    userType: "",
+    userType: "" as UserType | "",
     name: "",
     email: "",
     phone: "",
@@ -34,60 +33,95 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const validateBasic = () => {
+    if (!formData.userType) {
+      setErrorMessage("Selecione o tipo de conta (Cliente ou Prestador).")
+      return false
+    }
+    if (!formData.name.trim()) {
+      setErrorMessage("Informe seu nome completo.")
+      return false
+    }
+    if (!formData.email.trim()) {
+      setErrorMessage("Informe um e-mail válido.")
+      return false
+    }
+    if (!formData.password || formData.password.length < 6) {
+      setErrorMessage("Senha deve ter ao menos 6 caracteres.")
+      return false
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage("As senhas não coincidem.")
+      return false
+    }
+    // phone is optional but we can require basic digits if present
+    if (formData.phone && formData.phone.replace(/\D/g, "").length < 10) {
+      setErrorMessage("Telefone inválido.")
+      return false
+    }
+    setErrorMessage(null)
+    return true
   }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (!validateBasic()) return
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("As senhas não coincidem.")
-      return
-    }
-
-    if (!formData.userType) {
-      alert("Selecione o tipo de conta.")
-      return
-    }
+    setIsLoading(true)
+    setErrorMessage(null)
 
     try {
-      setIsLoading(true)
-
-      // Firebase Auth
+      // cria o usuário no Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        formData.email,
+        formData.email.trim(),
         formData.password
       )
-
       const user = userCredential.user
 
-      // Dados enviados ao Firestore
-        const userData: UserRegisterData = {
-      uid: user.uid,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      type: formData.userType as "cliente" | "prestador",
-      createdAt: new Date().toISOString() // ou new Date()
-    }
+      // cria o documento básico no Firestore (coleção "users")
+      const userDocRef = doc(db, "users", user.uid)
+      const userData = {
+        uid: user.uid,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || null,
+        type: formData.userType,
+        createdAt: serverTimestamp()
+      }
 
+      await setDoc(userDocRef, userData)
 
-      // Envia para a coleção "users"
-      await setDoc(doc(db, "users", user.uid), userData)
-
-      // Redirecionamento por tipo de conta
-      router.push(
-        formData.userType === "cliente"
-          ? "/dashboard/cliente"
-          : "/dashboard/prestador"
-      )
-
+      // redirecionamento:
+      if (formData.userType === "prestador") {
+        // redireciona para a tela de cadastro de prestador para completar (passa uid)
+        router.push(`/cadastro/prestador?uid=${user.uid}`)
+      } else {
+        // cliente -> dashboard
+        router.push("/dashboard/cliente")
+      }
     } catch (error: any) {
       console.error("Erro ao criar conta:", error)
-      alert(error.message || "Erro ao criar conta.")
+      // mensagens amigáveis por código
+      if (error?.code === "auth/email-already-in-use") {
+        // Não podemos vincular automaticamente a conta existente sem credenciais.
+        setErrorMessage(
+          "Este e-mail já está em uso. Faça login ou recupere a senha. " +
+            "Se você já criou conta e não completou o cadastro de prestador, entre com o mesmo e-mail e senha ou use 'Esqueci a senha'."
+        )
+      } else if (error?.code === "auth/invalid-email") {
+        setErrorMessage("E-mail inválido.")
+      } else if (error?.code === "auth/weak-password") {
+        setErrorMessage("Senha fraca. Use ao menos 6 caracteres.")
+      } else {
+        setErrorMessage(error?.message || "Erro ao criar conta. Tente novamente.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -109,14 +143,13 @@ export default function RegisterPage() {
             <CardDescription>Preencha os dados abaixo para criar sua conta</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               {/* TIPO DE CONTA */}
               <div className="space-y-3">
                 <Label>Tipo de conta</Label>
                 <RadioGroup
                   value={formData.userType}
-                  onValueChange={(value) => handleInputChange("userType", value)}
+                  onValueChange={(value) => handleInputChange("userType", value as string)}
                   className="flex space-x-6"
                 >
                   <div className="flex items-center space-x-2">
@@ -176,7 +209,6 @@ export default function RegisterPage() {
                     value={formData.phone}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange("phone", e.target.value)}
                     className="pl-10"
-                    required
                   />
                 </div>
               </div>
@@ -193,12 +225,14 @@ export default function RegisterPage() {
                     value={formData.password}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange("password", e.target.value)}
                     className="pl-10 pr-10"
+                    minLength={6}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                    aria-label="Alternar visibilidade da senha"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -217,32 +251,22 @@ export default function RegisterPage() {
                     value={formData.confirmPassword}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange("confirmPassword", e.target.value)}
                     className="pl-10 pr-10"
+                    minLength={6}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                    aria-label="Alternar visibilidade da confirmação de senha"
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              {/* TERMOS */}
-              <div className="flex items-center space-x-2">
-                <input id="terms" type="checkbox" className="rounded border-gray-300" required />
-                <Label htmlFor="terms" className="text-sm">
-                  Aceito os{" "}
-                  <Link href="/terms" className="text-indigo-600 hover:underline">
-                    termos de uso
-                  </Link>{" "}
-                  e{" "}
-                  <Link href="/privacy" className="text-indigo-600 hover:underline">
-                    política de privacidade
-                  </Link>
-                </Label>
-              </div>
+              {/* ERROS */}
+              {errorMessage && <p className="text-red-600 text-sm">{errorMessage}</p>}
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Criando conta..." : "Criar conta"}

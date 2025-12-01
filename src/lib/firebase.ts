@@ -1,10 +1,8 @@
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { serverTimestamp } from "firebase/firestore"
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyC8bdlY37Gp-gvZQuJwa6W_nBS_9W98IcE",
@@ -16,21 +14,18 @@ const firebaseConfig = {
   measurementId: "G-SR0W86L5QC"
 };
 
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-
-// garante que só inicializa 1 vez (Next reinicia módulos toda hora)
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+/**
+ * 🔥 FIRESTORE ESTÁVEL (SEM CACHE BUGADO)
+ * Usamos memoryLocalCache() — funciona em qualquer navegador,
+ * não cria IndexedDB, não quebra SSR, não dá erro de "client offline".
+ */
+export const db = initializeFirestore(app, {
+  localCache: memoryLocalCache(),
+});
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
 export const storage = getStorage(app);
-
-// analytics só no client
-export async function initAnalytics() {
-  if (typeof window === "undefined") return null;
-
-  const { getAnalytics } = await import("firebase/analytics");
-  return getAnalytics(app);
-}
 
 export default app;
