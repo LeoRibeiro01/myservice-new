@@ -1,8 +1,8 @@
-// src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+// Firebase configuration and initialization
+import { initializeApp, getApps, getApp } from "firebase/app"
+import { getAuth } from "firebase/auth"
+import { initializeFirestore, memoryLocalCache } from "firebase/firestore"
+import { getStorage } from "firebase/storage"
 
 const firebaseConfig = {
   apiKey: "AIzaSyC8bdlY37Gp-gvZQuJwa6W_nBS_9W98IcE",
@@ -11,21 +11,21 @@ const firebaseConfig = {
   storageBucket: "myservice-28f7e.appspot.com",
   messagingSenderId: "447491660194",
   appId: "1:447491660194:web:b6803bf0af6c836e06fafb",
-  measurementId: "G-SR0W86L5QC"
-};
+  measurementId: "G-SR0W86L5QC",
+}
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase (evita reinicializar se já existe)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
 /**
- * 🔥 FIRESTORE ESTÁVEL (SEM CACHE BUGADO)
- * Usamos memoryLocalCache() — funciona em qualquer navegador,
- * não cria IndexedDB, não quebra SSR, não dá erro de "client offline".
+ * Firestore com memoryLocalCache para evitar problemas de SSR
+ * e bugs de IndexedDB em diferentes navegadores
  */
 export const db = initializeFirestore(app, {
   localCache: memoryLocalCache(),
-});
+})
 
-export const auth = getAuth(app);
-export const storage = getStorage(app);
+export const auth = getAuth(app)
+export const storage = getStorage(app)
 
-export default app;
+export default app
